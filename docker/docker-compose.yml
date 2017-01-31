@@ -1,0 +1,52 @@
+version: '2'
+
+services:
+
+    nginx:
+        build:
+            context: ./nginx
+            args:
+                - PHP_UPSTREAM=php-fpm
+        volumes:
+            - ../laravel/:/var/www
+            - ./nginx/sites/:/etc/nginx/sites-available
+        ports:
+            - 80:80
+            - 443:443
+        networks:
+            code-network:
+              ipv4_address: 172.18.0.2
+    php-fpm:
+        build:
+            context: ./php-fpm
+            dockerfile: Dockerfile-70
+        volumes:
+            - ../laravel/:/var/www
+        ports:
+            - 9000:9000
+        networks:
+            code-network:
+              ipv4_address: 172.18.0.3
+    mysql:
+        build:
+            context: ./mysql
+            args:
+                - MYSQL_DATABASE=inter
+                - MYSQL_USER=inter
+                - MYSQL_PASSWORD=secret
+                - MYSQL_ROOT_PASSWORD=secret
+        ports:
+            - "3306:3306"
+        volumes:
+            - "./.data/db:/var/lib/mysql"
+        networks:
+            code-network:
+              ipv4_address: 172.18.0.4
+networks:
+    code-network:
+        driver: bridge
+        ipam:
+          driver: default
+          config:
+          - subnet: 172.18.0.0/24
+            gateway: 172.18.0.1
